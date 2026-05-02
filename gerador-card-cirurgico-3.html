@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Card Cirúrgico</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --beige: #F5F0EB; --beige2: #EDE6DC; --brown: #BBAB9A; --brown-dark: #8C7A6B;
+    --dark: #2C2C2C; --mid: #5A5A5A; --light: #9A9A9A; --white: #FFFFFF;
+    --green: #4CAF7D; --red: #E05252; --border: #DDD5CB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--beige); font-family: 'DM Sans', sans-serif; color: var(--dark); min-height: 100vh; padding: 24px 16px 80px; max-width: 480px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  header h1 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--dark); }
+  header p { font-size: 11px; color: var(--light); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .section { background: var(--white); border-radius: 12px; padding: 18px; margin-bottom: 12px; border: 1px solid var(--border); }
+  .section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--brown-dark); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .section-title span { font-size: 14px; }
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 11px; font-weight: 500; color: var(--mid); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.6px; }
+  input[type="text"], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--dark); background: var(--beige); outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+  input:focus, textarea:focus { border-color: var(--brown); background: var(--white); }
+  textarea { resize: vertical; min-height: 70px; }
+  .radio-group, .check-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-row, .check-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: var(--beige); transition: all 0.15s; font-size: 13px; color: var(--dark); }
+  .radio-row input, .check-row input { display: none; }
+  .radio-row.selected, .check-row.checked { background: var(--beige2); border-color: var(--brown); font-weight: 500; }
+  .custom-radio { width: 16px; height: 16px; border: 2px solid var(--brown); border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .custom-check { width: 16px; height: 16px; border: 2px solid var(--brown); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .radio-row.selected .custom-radio::after { content: ''; width: 8px; height: 8px; background: var(--brown-dark); border-radius: 50%; }
+  .check-row.checked .custom-check::after { content: '✓'; font-size: 10px; color: var(--brown-dark); font-weight: 700; }
+  .urgente-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--beige); cursor: pointer; }
+  .urgente-toggle.active { background: #FFF0F0; border-color: var(--red); }
+  .toggle-label { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .switch { width: 40px; height: 22px; background: var(--border); border-radius: 11px; position: relative; transition: background 0.2s; }
+  .switch.on { background: var(--red); }
+  .switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .switch.on::after { left: 21px; }
+  .btn-enviar { width: 100%; padding: 16px; background: var(--dark); color: white; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-enviar:disabled { background: var(--light); cursor: not-allowed; }
+  .btn-enviar.success { background: var(--green); }
+  .btn-limpar { width: 100%; padding: 12px; background: transparent; color: var(--light); border: 1px solid var(--border); border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; margin-top: 8px; }
+  .toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 500; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,0.2); max-width: 340px; text-align: center; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+  .toast.visible { display: block; }
+  .toast a { color: white; text-decoration: underline; margin-left: 6px; }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #convenioField { display: none; margin-top: 10px; }
+  #tipoOutroField { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Agenda Cirúrgica</h1>
+  <p>Dr. Carlos Alberto Bruno · Novo Paciente</p>
+</header>
+
+<!-- URGENTE -->
+<div class="section">
+  <div class="urgente-toggle" id="urgenteToggle" onclick="toggleUrgente()">
+    <div class="toggle-label">🔴 <span>Marcar como Urgente</span></div>
+    <div class="switch" id="urgenteSwitch"></div>
+  </div>
+</div>
+
+<!-- PACIENTE -->
+<div class="section">
+  <div class="section-title"><span>👤</span> Paciente</div>
+  <div class="field">
+    <label>Nome completo</label>
+    <input type="text" id="nome" placeholder="Nome do paciente">
+  </div>
+</div>
+
+<!-- PROCEDIMENTO -->
+<div class="section">
+  <div class="section-title"><span>🔪</span> Procedimento</div>
+  <div class="field">
+    <label>Tipo</label>
+    <div class="radio-group" id="tipo">
+      <div class="radio-row" onclick="selectRadio('tipo', 'Cirurgia de Mohs', this)"><div class="custom-radio"></div> Cirurgia de Mohs</div>
+      <div class="radio-row" onclick="selectRadio('tipo', 'Exérese', this)"><div class="custom-radio"></div> Exérese</div>
+      <div class="radio-row" onclick="selectRadio('tipo', 'TFD', this)"><div class="custom-radio"></div> TFD</div>
+      <div class="radio-row" onclick="selectRadio('tipo', 'Outro', this)"><div class="custom-radio"></div> Outro</div>
+    </div>
+  </div>
+  <div class="field" id="tipoOutroField">
+    <label>Especificar</label>
+    <input type="text" id="tipoOutro" placeholder="Descreva o procedimento">
+  </div>
+  <div class="field">
+    <label>Localização anatômica</label>
+    <input type="text" id="localizacao" placeholder="Ex: pálpebra inferior D, nariz, face">
+  </div>
+  <div class="field">
+    <label>Nº de lesões</label>
+    <input type="text" id="lesoes" placeholder="Ex: 1, 2, múltiplas">
+  </div>
+</div>
+
+<!-- LOCAL -->
+<div class="section">
+  <div class="section-title"><span>🏥</span> Local de Realização</div>
+  <div class="radio-group" id="local">
+    <div class="radio-row" onclick="selectRadio('local', 'Clínica Dermatologia Avançada', this)"><div class="custom-radio"></div> Clínica Dermatologia Avançada</div>
+    <div class="radio-row" onclick="selectRadio('local', 'Sinop Clínica', this)"><div class="custom-radio"></div> Sinop Clínica</div>
+    <div class="radio-row" onclick="selectRadio('local', 'Hosp. 2 Pinheiros', this)"><div class="custom-radio"></div> Hosp. 2 Pinheiros</div>
+  </div>
+</div>
+
+<!-- ANESTESIA -->
+<div class="section">
+  <div class="section-title"><span>💉</span> Anestesia</div>
+  <div class="radio-group" id="anestesia">
+    <div class="radio-row" onclick="selectRadio('anestesia', 'Local', this)"><div class="custom-radio"></div> Local</div>
+    <div class="radio-row" onclick="selectRadio('anestesia', 'Local + Sedação', this)"><div class="custom-radio"></div> Local + Sedação</div>
+  </div>
+</div>
+
+<!-- FINANCEIRO -->
+<div class="section">
+  <div class="section-title"><span>💳</span> Financeiro</div>
+  <div class="radio-group" id="financeiro">
+    <div class="radio-row" onclick="selectRadio('financeiro', 'Particular', this)"><div class="custom-radio"></div> Particular</div>
+    <div class="radio-row" onclick="selectRadio('financeiro', 'Convênio', this)"><div class="custom-radio"></div> Convênio</div>
+  </div>
+  <div id="convenioField">
+    <label>Nome do convênio</label>
+    <input type="text" id="convenio" placeholder="Ex: Unimed, Hapvida">
+  </div>
+</div>
+
+<!-- CLÍNICO -->
+<div class="section">
+  <div class="section-title"><span>⚕️</span> Dados Clínicos</div>
+  <div class="field">
+    <label>Alergias</label>
+    <input type="text" id="alergias" placeholder="Nenhuma conhecida / descrever">
+  </div>
+  <div class="field">
+    <label>Medicamentos em uso</label>
+    <input type="text" id="medicamentos" placeholder="Ex: AAS, anticoagulantes, varfarina">
+  </div>
+  <div class="field">
+    <label>Medicamentos a suspender antes da cirurgia</label>
+    <input type="text" id="medSuspender" placeholder="Ex: AAS, rivaroxabana" oninput="toggleDiasSuspender(this.value)">
+  </div>
+  <div class="field" id="diasSuspenderField" style="display:none">
+    <label>Suspender quantos dias antes</label>
+    <div class="radio-group" id="diasSuspender">
+      <div class="radio-row" onclick="selectRadio('diasSuspender', '3 dias antes', this)"><div class="custom-radio"></div> 3 dias antes</div>
+      <div class="radio-row" onclick="selectRadio('diasSuspender', '5 dias antes', this)"><div class="custom-radio"></div> 5 dias antes</div>
+      <div class="radio-row" onclick="selectRadio('diasSuspender', '7 dias antes', this)"><div class="custom-radio"></div> 7 dias antes</div>
+      <div class="radio-row" onclick="selectRadio('diasSuspender', '10 dias antes', this)"><div class="custom-radio"></div> 10 dias antes</div>
+    </div>
+  </div>
+</div>
+
+<!-- REFERÊNCIA -->
+<div class="section">
+  <div class="section-title"><span>👨‍⚕️</span> Médico Referência</div>
+  <div class="field">
+    <label>Nome</label>
+    <input type="text" id="referencia" placeholder="Médico que indicou o paciente">
+  </div>
+</div>
+
+<!-- PENDÊNCIAS -->
+<div class="section">
+  <div class="section-title"><span>📋</span> Pendências Pré-Op</div>
+  <div class="check-group">
+    <div class="check-row" onclick="toggleCheck(this, 'Autorização convênio')"><div class="custom-check"></div> Autorização convênio</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Exames pré-anestésicos')"><div class="custom-check"></div> Exames pré-anestésicos</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Avaliação anestesista')"><div class="custom-check"></div> Avaliação anestesista</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Avaliação cardiológica')"><div class="custom-check"></div> Avaliação cardiológica</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Suspensão de medicamentos')"><div class="custom-check"></div> Suspensão de medicamentos</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Consentimento informado assinado')"><div class="custom-check"></div> Consentimento informado assinado</div>
+  </div>
+  <div class="field" style="margin-top:10px">
+    <label>Outras pendências</label>
+    <input type="text" id="outrasPendencias" placeholder="Descrever se necessário">
+  </div>
+</div>
+
+<!-- OBS -->
+<div class="section">
+  <div class="section-title"><span>📝</span> Observações</div>
+  <textarea id="obs" placeholder="Informações adicionais relevantes..."></textarea>
+</div>
+
+<button class="btn-enviar" id="btnEnviar" onclick="enviarTrello()">
+  Enviar para o Trello
+</button>
+<button class="btn-limpar" onclick="limparForm()">Limpar formulário</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API_KEY = '3956f2efa588dd58ec180973d62379d4';
+  const TOKEN = 'ATTA194adcc228f918d927299a378429ea413369947549f750d0403a28fb05ef45d4CC915176';
+  const BOARD_ID_STORAGE_KEY = 'trello_board_data';
+  const BASE = 'https://api.trello.com/1';
+
+  const radioValues = {};
+  const checkValues = {};
+  let urgente = false;
+
+  function toggleUrgente() {
+    urgente = !urgente;
+    document.getElementById('urgenteSwitch').classList.toggle('on', urgente);
+    document.getElementById('urgenteToggle').classList.toggle('active', urgente);
+  }
+
+  function selectRadio(group, value, el) {
+    radioValues[group] = value;
+    document.querySelectorAll(`#${group} .radio-row`).forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+    if (group === 'tipo') document.getElementById('tipoOutroField').style.display = value === 'Outro' ? 'block' : 'none';
+    if (group === 'financeiro') document.getElementById('convenioField').style.display = value === 'Convênio' ? 'block' : 'none';
+  }
+
+  function toggleDiasSuspender(val) {
+    document.getElementById('diasSuspenderField').style.display = val.trim() ? 'block' : 'none';
+    if (!val.trim()) delete radioValues['diasSuspender'];
+  }
+
+  function toggleCheck(el, value) {
+    el.classList.toggle('checked');
+    el.classList.contains('checked') ? checkValues[value] = true : delete checkValues[value];
+  }
+
+  function showToast(msg, type = '', link = null) {
+    const t = document.getElementById('toast');
+    t.className = 'toast visible ' + type;
+    t.innerHTML = msg + (link ? ` <a href="${link}" target="_blank">Abrir →</a>` : '');
+    setTimeout(() => t.classList.remove('visible'), 6000);
+  }
+
+  async function trelloApi(method, path, params = {}) {
+    const url = new URL(BASE + path);
+    url.searchParams.set('key', API_KEY);
+    url.searchParams.set('token', TOKEN);
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: method !== 'GET' ? JSON.stringify(params) : undefined
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  // Cache board data (listas e labels) para não buscar toda vez
+  async function getBoardData() {
+    const cached = sessionStorage.getItem(BOARD_ID_STORAGE_KEY);
+    if (cached) return JSON.parse(cached);
+
+    // Buscar boards e encontrar o correto
+    const boards = await trelloApi('GET', '/members/me/boards');
+    const board = boards.find(b => b.name.includes('Agenda Cirúrgica'));
+    if (!board) throw new Error('Board "Agenda Cirúrgica" não encontrado. Verifique se o board foi criado.');
+
+    const [lists, labels] = await Promise.all([
+      trelloApi('GET', `/boards/${board.id}/lists`),
+      trelloApi('GET', `/boards/${board.id}/labels`)
+    ]);
+
+    const data = { boardId: board.id, lists, labels };
+    sessionStorage.setItem(BOARD_ID_STORAGE_KEY, JSON.stringify(data));
+    return data;
+  }
+
+  function montarDescricao() {
+    const nome = document.getElementById('nome').value.trim();
+    const tipo = radioValues['tipo'] === 'Outro' ? (document.getElementById('tipoOutro').value || 'Outro') : (radioValues['tipo'] || '—');
+    const localizacao = document.getElementById('localizacao').value.trim() || '—';
+    const lesoes = document.getElementById('lesoes').value.trim() || '—';
+    const local = radioValues['local'] || '—';
+    const anestesia = radioValues['anestesia'] || '—';
+    const financeiro = radioValues['financeiro'] || '—';
+    const convenio = document.getElementById('convenio').value.trim();
+    const alergias = document.getElementById('alergias').value.trim() || '—';
+    const medicamentos = document.getElementById('medicamentos').value.trim() || '—';
+    const medSuspender = document.getElementById('medSuspender').value.trim();
+    const diasSuspender = radioValues['diasSuspender'] || '';
+    const referencia = document.getElementById('referencia').value.trim() || '—';
+    const outrasPendencias = document.getElementById('outrasPendencias').value.trim();
+    const obs = document.getElementById('obs').value.trim();
+    const pendentes = Object.keys(checkValues);
+
+    let txt = urgente ? '🔴 URGENTE\n\n' : '';
+    txt += `👤 PACIENTE\nNome: ${nome || '—'}\n`;
+    txt += `\n🔪 PROCEDIMENTO\nTipo: ${tipo}\nLocalização: ${localizacao}\nNº de lesões: ${lesoes}\n`;
+    txt += `\n🏥 LOCAL\n${local}\n`;
+    txt += `\n💉 ANESTESIA\n${anestesia}\n`;
+    txt += `\n💳 FINANCEIRO\n`;
+    txt += financeiro === 'Convênio' && convenio ? `Convênio: ${convenio}\n` : `${financeiro}\n`;
+    txt += `\n⚕️ DADOS CLÍNICOS\nAlergias: ${alergias}\nMedicamentos em uso: ${medicamentos}\n`;
+    if (medSuspender) txt += `Suspender antes da cirurgia: ${medSuspender}${diasSuspender ? ' — ' + diasSuspender : ''}\n`;
+    txt += `\n👨‍⚕️ MÉDICO REFERÊNCIA\n${referencia}\n`;
+
+    if (pendentes.length > 0 || outrasPendencias) {
+      txt += `\n📋 PENDÊNCIAS PRÉ-OP\n`;
+      pendentes.forEach(p => txt += `☐ ${p}\n`);
+      if (outrasPendencias) txt += `☐ ${outrasPendencias}\n`;
+    }
+    if (obs) txt += `\n📝 OBSERVAÇÕES\n${obs}\n`;
+    return txt;
+  }
+
+  function getLabelIds(labels) {
+    const ids = [];
+    const tipo = radioValues['tipo'] || '';
+    const anestesia = radioValues['anestesia'] || '';
+    const local = radioValues['local'] || '';
+
+    const map = {
+      'Mohs': 'Cirurgia de Mohs',
+      'Exérese': 'Exérese',
+      'TFD': 'TFD',
+      'Sedação': 'Local + Sedação',
+      'Urgente': '__urgente__',
+      'Sinop': 'Sinop'
+    };
+
+    labels.forEach(l => {
+      const n = l.name || '';
+      if (n.includes('Mohs') && tipo === 'Cirurgia de Mohs') ids.push(l.id);
+      if (n.includes('Exérese') && tipo === 'Exérese') ids.push(l.id);
+      if (n.includes('TFD') && tipo === 'TFD') ids.push(l.id);
+      if (n.includes('Sedação') && anestesia === 'Local + Sedação') ids.push(l.id);
+      if (n.includes('Urgente') && urgente) ids.push(l.id);
+      if (n.includes('Sinop') && (local.includes('Sinop') || local.includes('Pinheiros'))) ids.push(l.id);
+    });
+    return ids;
+  }
+
+  async function enviarTrello() {
+    const nome = document.getElementById('nome').value.trim();
+    if (!nome) { showToast('Informe o nome do paciente.', 'error'); return; }
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Enviando...';
+
+    try {
+      const { lists, labels } = await getBoardData();
+
+      // Encontrar lista Novo Paciente
+      const listaNovoPaciente = lists.find(l => l.name.includes('Novo Paciente'));
+      if (!listaNovoPaciente) throw new Error('Lista "Novo Paciente" não encontrada no board.');
+
+      const desc = montarDescricao();
+      const labelIds = getLabelIds(labels);
+
+      // Criar card
+      const card = await trelloApi('POST', '/cards', {
+        name: nome,
+        desc,
+        idList: listaNovoPaciente.id,
+        idLabels: labelIds,
+        pos: 'top'
+      });
+
+      btn.innerHTML = 'Enviado ✓';
+      btn.classList.add('success');
+      showToast(`Card criado para ${nome}`, 'success', card.url);
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'Enviar para o Trello';
+        btn.classList.remove('success');
+        limparForm();
+      }, 3000);
+
+    } catch (e) {
+      console.error(e);
+      showToast('Erro ao criar card: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Enviar para o Trello';
+    }
+  }
+
+  function limparForm() {
+    document.querySelectorAll('input[type=text], textarea').forEach(el => el.value = '');
+    document.getElementById('diasSuspenderField').style.display = 'none';
+    document.querySelectorAll('.radio-row').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('.check-row').forEach(el => el.classList.remove('checked'));
+    Object.keys(radioValues).forEach(k => delete radioValues[k]);
+    Object.keys(checkValues).forEach(k => delete checkValues[k]);
+    urgente = false;
+    document.getElementById('urgenteSwitch').classList.remove('on');
+    document.getElementById('urgenteToggle').classList.remove('active');
+    document.getElementById('tipoOutroField').style.display = 'none';
+    document.getElementById('convenioField').style.display = 'none';
+  }
+</script>
+</body>
+</html>
