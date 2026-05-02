@@ -108,19 +108,21 @@
 <!-- LOCAL -->
 <div class="section">
   <div class="section-title"><span>🏥</span> Local de Realização</div>
-  <div class="radio-group" id="local">
-    <div class="radio-row" onclick="selectRadio('local', 'Clínica Dermatologia Avançada', this)"><div class="custom-radio"></div> Clínica Dermatologia Avançada</div>
-    <div class="radio-row" onclick="selectRadio('local', 'Sinop Clínica', this)"><div class="custom-radio"></div> Sinop Clínica</div>
-    <div class="radio-row" onclick="selectRadio('local', 'Hosp. 2 Pinheiros', this)"><div class="custom-radio"></div> Hosp. 2 Pinheiros</div>
+  <div class="check-group" id="local">
+    <div class="check-row" onclick="toggleCheck(this, 'Clínica Dermatologia Avançada')"><div class="custom-check"></div> Clínica Dermatologia Avançada</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Sinop Clínica')"><div class="custom-check"></div> Sinop Clínica</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Hosp. 2 Pinheiros')"><div class="custom-check"></div> Hosp. 2 Pinheiros</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Hospital Jacarandás')"><div class="custom-check"></div> Hospital Jacarandás</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Hospital Santo Antônio')"><div class="custom-check"></div> Hospital Santo Antônio</div>
   </div>
 </div>
 
 <!-- ANESTESIA -->
 <div class="section">
   <div class="section-title"><span>💉</span> Anestesia</div>
-  <div class="radio-group" id="anestesia">
-    <div class="radio-row" onclick="selectRadio('anestesia', 'Local', this)"><div class="custom-radio"></div> Local</div>
-    <div class="radio-row" onclick="selectRadio('anestesia', 'Local + Sedação', this)"><div class="custom-radio"></div> Local + Sedação</div>
+  <div class="check-group" id="anestesia">
+    <div class="check-row" onclick="toggleCheck(this, 'Local')"><div class="custom-check"></div> Local</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Local + Sedação')"><div class="custom-check"></div> Local + Sedação</div>
   </div>
 </div>
 
@@ -182,6 +184,12 @@
     <div class="check-row" onclick="toggleCheck(this, 'Avaliação cardiológica')"><div class="custom-check"></div> Avaliação cardiológica</div>
     <div class="check-row" onclick="toggleCheck(this, 'Suspensão de medicamentos')"><div class="custom-check"></div> Suspensão de medicamentos</div>
     <div class="check-row" onclick="toggleCheck(this, 'Consentimento informado assinado')"><div class="custom-check"></div> Consentimento informado assinado</div>
+    <div class="section-title" style="margin-top:14px"><span>💰</span> Orçamento Enviado</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Orçamento enviado — Equipe Dr. Carlos')"><div class="custom-check"></div> Equipe Dr. Carlos</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Orçamento enviado — Sinop Clínica')"><div class="custom-check"></div> Sinop Clínica</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Orçamento enviado — Hosp. 2 Pinheiros')"><div class="custom-check"></div> Hosp. 2 Pinheiros</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Orçamento enviado — Hospital Jacarandás')"><div class="custom-check"></div> Hospital Jacarandás</div>
+    <div class="check-row" onclick="toggleCheck(this, 'Orçamento enviado — Hospital Santo Antônio')"><div class="custom-check"></div> Hospital Santo Antônio</div>
   </div>
   <div class="field" style="margin-top:10px">
     <label>Outras pendências</label>
@@ -281,8 +289,10 @@
     const tipo = radioValues['tipo'] === 'Outro' ? (document.getElementById('tipoOutro').value || 'Outro') : (radioValues['tipo'] || '—');
     const localizacao = document.getElementById('localizacao').value.trim() || '—';
     const lesoes = document.getElementById('lesoes').value.trim() || '—';
-    const local = radioValues['local'] || '—';
-    const anestesia = radioValues['anestesia'] || '—';
+    const localSel = Object.keys(checkValues).filter(k => ['Clínica Dermatologia Avançada','Sinop Clínica','Hosp. 2 Pinheiros','Hospital Jacarandás','Hospital Santo Antônio'].includes(k));
+    const local = localSel.length ? localSel.join(', ') : '—';
+    const anestesiaSel = Object.keys(checkValues).filter(k => ['Local','Local + Sedação'].includes(k));
+    const anestesia = anestesiaSel.length ? anestesiaSel.join(' / ') : '—';
     const financeiro = radioValues['financeiro'] || '—';
     const convenio = document.getElementById('convenio').value.trim();
     const alergias = document.getElementById('alergias').value.trim() || '—';
@@ -292,7 +302,9 @@
     const referencia = document.getElementById('referencia').value.trim() || '—';
     const outrasPendencias = document.getElementById('outrasPendencias').value.trim();
     const obs = document.getElementById('obs').value.trim();
-    const pendentes = Object.keys(checkValues);
+    const locaisOpts = ['Clínica Dermatologia Avançada','Sinop Clínica','Hosp. 2 Pinheiros','Hospital Jacarandás','Hospital Santo Antônio'];
+    const anestesiaOpts = ['Local','Local + Sedação'];
+    const pendentes = Object.keys(checkValues).filter(k => !locaisOpts.includes(k) && !anestesiaOpts.includes(k));
 
     let txt = urgente ? '🔴 URGENTE\n\n' : '';
     txt += `👤 PACIENTE\nNome: ${nome || '—'}\n`;
@@ -334,9 +346,9 @@
       if (n.includes('Mohs') && tipo === 'Cirurgia de Mohs') ids.push(l.id);
       if (n.includes('Exérese') && tipo === 'Exérese') ids.push(l.id);
       if (n.includes('TFD') && tipo === 'TFD') ids.push(l.id);
-      if (n.includes('Sedação') && anestesia === 'Local + Sedação') ids.push(l.id);
+      if (n.includes('Sedação') && Object.keys(checkValues).includes('Local + Sedação')) ids.push(l.id);
       if (n.includes('Urgente') && urgente) ids.push(l.id);
-      if (n.includes('Sinop') && (local.includes('Sinop') || local.includes('Pinheiros'))) ids.push(l.id);
+      if (n.includes('Sinop') && (Object.keys(checkValues).some(k => k.includes('Sinop') || k.includes('Pinheiros') || k.includes('Jacarandás') || k.includes('Santo Antônio')))) ids.push(l.id);
     });
     return ids;
   }
